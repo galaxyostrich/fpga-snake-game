@@ -1,0 +1,3 @@
+# Store all files exactly as committed (no line-ending conversion), so the
+# RTL, constraints and IP configuration remain byte-identical to the originals.
+* -text
