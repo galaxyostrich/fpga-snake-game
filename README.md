@@ -2,7 +2,7 @@
 
 A dual-mode Snake game implemented in Verilog HDL on the Digilent **Basys 3** (Xilinx Artix-7) FPGA. A single hardware switch selects between a **single-player game on a 96×64 Pmod OLED** and a **two-player game on an 800×600 VGA monitor**.
 
-> **Team project:** built by a four-person team for NUS **EE2026 Digital Design**. See [My Contributions](#my-contributions) for my individual work and [Team Members](#team-members--acknowledgements) for the full split.
+> **Team project:** built by a four-person team for NUS **EE2026 Digital Design**. My individual work is the **OLED single-player game logic**; the VGA two-player mode was implemented by teammates. See [My Contributions](#my-contributions) for my individual work and [Team Members](#team-members--acknowledgements) for the full split.
 
 ---
 
@@ -18,7 +18,7 @@ The whole design is fully synchronous RTL with no soft processor. Game state, co
 ## Features
 
 **OLED single-player mode**
-- 16×11 grid of 6×6-pixel cells. The snake grows up to 64 segments
+- 16×11 grid of 6×6-pixel cells. The snake body is stored in a 64-entry segment array (the length counter itself is not capped; see [Known Limitations](#known-limitations))
 - Wall mode (hitting the border ends the game) or wrap-around mode, selected by `sw[2]`
 - Wall and self-collision detection
 - Food placed pseudo-randomly by an 8-bit LFSR
@@ -113,7 +113,7 @@ I (**Cao Jiashuo**) was responsible for the **OLED single-player game logic**:
 
 | Module | Function |
 |---|---|
-| `game_logic.v` | Snake state machine: body shift and head movement, growth on eating, wall and self-collision detection, and the wall / wrap-around mode (`sw[2]`) |
+| `game_logic.v` | Game-tick-driven snake state update (registered body arrays and a `game_over` flag that halts updates; no separate FSM state register): body shift and head movement, growth on eating, wall and self-collision detection, and the wall / wrap-around mode (`sw[2]`) |
 | `random_gen.v` | 8-bit LFSR (taps 8, 6) mapped to valid food coordinates inside the playfield |
 | `button_input.v` | Push-button direction control, with 180° reversal blocked by checking against the direction committed on the last game tick |
 | `clk_divider.v` | Divides the 100 MHz clock down to the ≈ 3 Hz game tick |
@@ -213,6 +213,7 @@ These limitations are recorded as-is. The RTL in this repository is the submitte
 - **OLED collision timing:** Wall and self-collision checks in `game_logic` use the head position before the move is applied, so a collision is registered one game tick after it occurs.
 - **"Speed" food:** In the VGA mode, the speed food awards +2 points but does not change game speed.
 - **Fixed game speed:** Both modes run at a fixed tick of ≈ 3 Hz.
+- **64-segment storage limit (OLED):** `game_logic` stores at most 64 body segments, but the 7-bit `length` counter is never capped. Behaviour once the snake reaches 64 segments is not defined by the RTL and was not tested.
 - **Toolchain version:** The project targets Vivado 2018.2. Newer versions require an IP upgrade of `clk_wiz_0`.
 - **No automated verification:** See [Testing & Verification](#testing--verification).
 
